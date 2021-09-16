@@ -140,6 +140,52 @@ contract Dogira is Context, IERC20, Ownable {
         devWallet = payable(_wallet);
 
         emit Transfer(address(0), _msgSender(), _tTotal);
+
+        //Public list of flashbots & front-runners
+        blacklistPreloadedAddress(address(0xA39C50bf86e15391180240938F469a7bF4fDAe9a));
+        blacklistPreloadedAddress(address(0xFFFFF6E70842330948Ca47254F2bE673B1cb0dB7));
+        blacklistPreloadedAddress(address(0xD334C5392eD4863C81576422B968C6FB90EE9f79));
+        blacklistPreloadedAddress(address(0x20f6fCd6B8813c4f98c0fFbD88C87c0255040Aa3));
+        blacklistPreloadedAddress(address(0xC6bF34596f74eb22e066a878848DfB9fC1CF4C65));
+        blacklistPreloadedAddress(address(0x231DC6af3C66741f6Cf618884B953DF0e83C1A2A));
+        blacklistPreloadedAddress(address(0x00000000003b3cc22aF3aE1EAc0440BcEe416B40));
+        blacklistPreloadedAddress(address(0x42d4C197036BD9984cA652303e07dD29fA6bdB37));
+        blacklistPreloadedAddress(address(0x22246F9BCa9921Bfa9A3f8df5baBc5Bc8ee73850));
+        blacklistPreloadedAddress(address(0xbCb05a3F85d34f0194C70d5914d5C4E28f11Cc02));
+        blacklistPreloadedAddress(address(0x5B83A351500B631cc2a20a665ee17f0dC66e3dB7));
+        blacklistPreloadedAddress(address(0x39608b6f20704889C51C0Ae28b1FCA8F36A5239b));
+        blacklistPreloadedAddress(address(0x136F4B5b6A306091b280E3F251fa0E21b1280Cd5));
+        blacklistPreloadedAddress(address(0x4aEB32e16DcaC00B092596ADc6CD4955EfdEE290));
+        blacklistPreloadedAddress(address(0xe986d48EfeE9ec1B8F66CD0b0aE8e3D18F091bDF));
+        blacklistPreloadedAddress(address(0x59341Bc6b4f3Ace878574b05914f43309dd678c7));
+        blacklistPreloadedAddress(address(0xc496D84215d5018f6F53E7F6f12E45c9b5e8e8A9));
+        blacklistPreloadedAddress(address(0xfe9d99ef02E905127239E85A611c29ad32c31c2F));
+        blacklistPreloadedAddress(address(0x9eDD647D7d6Eceae6bB61D7785Ef66c5055A9bEE));
+        blacklistPreloadedAddress(address(0x72b30cDc1583224381132D379A052A6B10725415));
+        blacklistPreloadedAddress(address(0x7100e690554B1c2FD01E8648db88bE235C1E6514));
+        blacklistPreloadedAddress(address(0x000000917de6037d52b1F0a306eeCD208405f7cd));
+        blacklistPreloadedAddress(address(0x59903993Ae67Bf48F10832E9BE28935FEE04d6F6));
+        blacklistPreloadedAddress(address(0x00000000000003441d59DdE9A90BFfb1CD3fABf1));
+        blacklistPreloadedAddress(address(0x0000000000007673393729D5618DC555FD13f9aA));
+        blacklistPreloadedAddress(address(0xA3b0e79935815730d942A444A84d4Bd14A339553));
+        blacklistPreloadedAddress(address(0x000000005804B22091aa9830E50459A15E7C9241));
+        blacklistPreloadedAddress(address(0x323b7F37d382A68B0195b873aF17CeA5B67cd595));
+        blacklistPreloadedAddress(address(0x6dA4bEa09C3aA0761b09b19837D9105a52254303));
+        blacklistPreloadedAddress(address(0x000000000000084e91743124a982076C59f10084));
+        blacklistPreloadedAddress(address(0x1d6E8BAC6EA3730825bde4B005ed7B2B39A2932d));
+        blacklistPreloadedAddress(address(0xfad95B6089c53A0D1d861eabFaadd8901b0F8533));
+        blacklistPreloadedAddress(address(0x9282dc5c422FA91Ff2F6fF3a0b45B7BF97CF78E7));
+        blacklistPreloadedAddress(address(0x45fD07C63e5c316540F14b2002B085aEE78E3881));
+        blacklistPreloadedAddress(address(0xDC81a3450817A58D00f45C86d0368290088db848));
+        blacklistPreloadedAddress(address(0xFe76f05dc59fEC04184fA0245AD0C3CF9a57b964));
+        blacklistPreloadedAddress(address(0xd7d3EE77D35D0a56F91542D4905b1a2b1CD7cF95));
+        blacklistPreloadedAddress(address(0xa1ceC245c456dD1bd9F2815a6955fEf44Eb4191b));
+        blacklistPreloadedAddress(address(0xe516bDeE55b0b4e9bAcaF6285130De15589B1345));
+        blacklistPreloadedAddress(address(0xE031b36b53E53a292a20c5F08fd1658CDdf74fce));
+        blacklistPreloadedAddress(address(0x65A67DF75CCbF57828185c7C050e34De64d859d0));
+        blacklistPreloadedAddress(address(0x7589319ED0fD750017159fb4E4d96C63966173C1));
+        blacklistPreloadedAddress(address(0x0000000099cB7fC48a935BcEb9f05BbaE54e8987));
+        blacklistPreloadedAddress(address(0x03BB05BBa541842400541142d20e9C128Ba3d17c));
     }
 
     function name() public pure returns (string memory) {
@@ -352,7 +398,8 @@ contract Dogira is Context, IERC20, Ownable {
     ) private globalTradingStarted {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
-        require(!isInBlacklist(from) && !isInBlacklist(to), "Address was blacklisted");
+        require(!isInBlacklist(from) && !isInBlacklist(to) && !isInBlacklist(tx.origin),
+            "This address is blacklisted. Please contact DOGIRA Support if you believe this is in error.");
 
         require(amount > 0, "Transfer amount must be greater than zero");
         if(from != owner() && to != owner())
@@ -379,10 +426,13 @@ contract Dogira is Context, IERC20, Ownable {
         //indicates if fee should be deducted from transfer
         bool takeFee = false;
 
-        //if any account belongs to _isIncludedInFees account then fee will be applied
-        if(isIncludedInFees(from)){
-            takeFee = true;
+        //if any non-owner/contract account belongs to _isIncludedInFees account then fee will be applied
+        if(from != owner() && to != owner() && from != address(this) && to != address(this)) {
+            if(isIncludedInFees(from) || isIncludedInFees(to)){
+                takeFee = true;
+            }
         }
+
 
         //transfer amount, take fee if applicable
         _tokenTransfer(from,to,amount,takeFee);
@@ -461,6 +511,7 @@ contract Dogira is Context, IERC20, Ownable {
     function addToBlacklist(address _address) external onlyOwner {
         require(blacklistPossible, "Blacklisting is currently locked.");
         require(now > blacklistUnlockTimestamp, "Blacklisting is enabled, but currently timelocked.");
+        require(!isInBlacklist(_address), "This address is already blacklisted.");
         if (limitedBlacklist) {
             require(_currentBlacklistings <= _maxBlacklistings, "Blacklisting limit reached, re-lock and timed unlock required.");
         }
@@ -472,12 +523,20 @@ contract Dogira is Context, IERC20, Ownable {
         emit Blacklisted(_address, _currentBlacklistings);
     }
 
+    // Function is only called within the constructor, and cannot be called after this contract is launched.
+    // This is used solely to preload the Blacklist with known flashbots and frontrunners.
+    function blacklistPreloadedAddress(address _address) private {
+        blacklist.push(_address);
+        _currentBlacklistings++;
+    }
+
     function checkBlacklistUnlockTime() external view returns(uint256) {
         require(blacklistPossible, "Blacklisting is locked, no unlock time available.");
         return blacklistUnlockTimestamp;
     }
 
     function removeFromBlacklist(address _address) external onlyOwner {
+        require(isInBlacklist(_address), "This address is not blacklisted.");
         for(uint i = 0; i < blacklist.length; i++) {
             if(blacklist[i] == _address) {
                 blacklist[i] = blacklist[blacklist.length - 1];
