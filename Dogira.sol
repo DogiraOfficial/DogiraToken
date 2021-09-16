@@ -50,10 +50,8 @@ contract Dogira is Context, IERC20, Ownable {
 
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapTokensEnabledUpdated(bool enabled);
-    event TokenSwapped(
-        uint256 tokensSwapped,
-        uint256 ethReceived
-    );
+    event SwapAndLiquifyFailed(uint256 tokensSwapped);
+    event SwapTokensForETH(uint256 tokensSwapped);
 
     event FeeAppliedTo(address _address);
     event FeeExcludedFrom(address _address);
@@ -427,7 +425,7 @@ contract Dogira is Context, IERC20, Ownable {
         bool takeFee = false;
 
         //if any non-owner/contract account belongs to _isIncludedInFees account then fee will be applied
-        if(from != owner() && to != owner() && from != address(this) && to != address(this)) {
+        if(_taxFee > 0 && from != owner() && to != owner() && from != address(this) && to != address(this)) {
             if(isIncludedInFees(from) || isIncludedInFees(to)){
                 takeFee = true;
             }
@@ -448,8 +446,6 @@ contract Dogira is Context, IERC20, Ownable {
         // how much ETH did we just swap into?
         uint256 fromSwap = address(this).balance.sub(initialBalance);
 
-        emit TokenSwapped(toSwapForEth, fromSwap);
-
         devWallet.transfer(fromSwap);
     }
 
@@ -462,13 +458,17 @@ contract Dogira is Context, IERC20, Ownable {
         _approve(address(this), address(uniswapV2Router), tokenAmount);
 
         // make the swap
-        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+        try uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
             0, // accept any amount of ETH
             path,
             address(this),
             block.timestamp
-        );
+        ) {
+            emit SwapTokensForETH(tokenAmount);
+        } catch {
+            emit SwapAndLiquifyFailed(tokenAmount);
+        }
     }
 
     //this method is responsible for taking all fee, if takeFee is true
