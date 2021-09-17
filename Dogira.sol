@@ -105,9 +105,9 @@ contract Dogira is Context, IERC20, Ownable {
         devWallet = payable(_wallet);
 
         // whitelisting for liquidity pair adding
-        _routerWhitelist[this] = true;
+        _routerWhitelist[address(this)] = true;
         _routerWhitelist[owner()] = true;
-        _routerWhitelist[_uniswapV2Router] = true;
+        _routerWhitelist[address(_uniswapV2Router)] = true;
 
         emit Transfer(address(0), _msgSender(), _tTotal);
 
@@ -362,7 +362,7 @@ contract Dogira is Context, IERC20, Ownable {
     }
 
     function _transfer(address from, address to, uint256 amount) private {
-        if (!globalTradingEnabled && !_routerWhitelist(from) && !_routerWhitelist(to)) {
+        if (!globalTradingEnabled && !_routerWhitelist[from] && !_routerWhitelist[to]) {
             require(_msgSender() == owner() || globalTradingEnabled, "Trading has not yet been enabled.");
         }
         require(from != address(0), "ERC20: transfer from the zero address");
