@@ -95,7 +95,7 @@ contract Dogira is Context, IERC20, Ownable {
 
         // This Router address should be changed based on network.
 
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff);
         // Create a uniswap pair for this new token
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
         .createPair(address(this), _uniswapV2Router.WETH());
@@ -365,14 +365,17 @@ contract Dogira is Context, IERC20, Ownable {
         if (!globalTradingEnabled && !_routerWhitelist[from] && !_routerWhitelist[to]) {
             require(_msgSender() == owner() || globalTradingEnabled, "Trading has not yet been enabled.");
         }
+
+        if(from != owner() && to != owner()) {
+            require(amount <= maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
+        }
+
+        require(amount > 0, "Transfer amount must be greater than zero");
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
         require(!isInBlacklist(from) && !isInBlacklist(to) && !isInBlacklist(tx.origin),
             "This address is blacklisted. Please contact DOGIRA Support if you believe this is in error.");
 
-        require(amount > 0, "Transfer amount must be greater than zero");
-        if(from != owner() && to != owner())
-            require(amount <= maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
 
         uint256 contractTokenBalance = balanceOf(address(this));
 
