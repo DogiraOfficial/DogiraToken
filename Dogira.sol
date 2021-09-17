@@ -73,16 +73,14 @@ contract Dogira is Context, IERC20, Ownable {
     bool public limitedBlacklist = true;
     bool public blacklistPossible = true;
 
+    // whitelist for adding liquidity while global trading is disabled
+    mapping (address => bool) private _routerWhitelist;
+    event Whitelisted(address indexed node);
+
     event Blacklisted(address indexed node, uint8 blacklistsThisUnlock);
     event Unblacklisted(address indexed node);
     event BlacklistUnlockCalled(uint256 unlockTimestamp, uint daysUntilUnlock, bool isLimited);
     event BlacklistLockCalled(uint256 lockTimestamp);
-
-    /// @notice A checkpoint for marking number of votes from a given block
-    struct Checkpoint {
-        uint32 fromBlock;
-        uint256 votes;
-    }
 
     bool public globalTradingEnabled = false;
 
@@ -90,12 +88,6 @@ contract Dogira is Context, IERC20, Ownable {
         inSwapTokens = true;
         _;
         inSwapTokens = false;
-    }
-
-    // 
-    modifier globalTradingStarted {
-        require(_msgSender() == owner() || globalTradingEnabled, "Trading has not yet been enabled.");
-        _;
     }
 
     constructor (address _wallet) public {
@@ -111,6 +103,11 @@ contract Dogira is Context, IERC20, Ownable {
         // set the rest of the contract variables
         uniswapV2Router = _uniswapV2Router;
         devWallet = payable(_wallet);
+
+        // whitelisting for liquidity pair adding
+        _routerWhitelist[this] = true;
+        _routerWhitelist[owner()] = true;
+        _routerWhitelist[_uniswapV2Router] = true;
 
         emit Transfer(address(0), _msgSender(), _tTotal);
 
@@ -364,11 +361,10 @@ contract Dogira is Context, IERC20, Ownable {
         emit Approval(owner, spender, amount);
     }
 
-    function _transfer(
-        address from,
-        address to,
-        uint256 amount
-    ) private globalTradingStarted {
+    function _transfer(address from, address to, uint256 amount) private {
+        if (!globalTradingEnabled && !_routerWhitelist(from) && !_routerWhitelist(to)) {
+            require(_msgSender() == owner() || globalTradingEnabled, "Trading has not yet been enabled.");
+        }
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
         require(!isInBlacklist(from) && !isInBlacklist(to) && !isInBlacklist(tx.origin),
@@ -482,6 +478,13 @@ contract Dogira is Context, IERC20, Ownable {
         emit BlacklistLockCalled(now);
     }
 
+    function addToWhitelist(address _address) external onlyOwner {
+        require(!globalTradingEnabled, "Global trading is enabled: Whitelist no longer necessary.");
+        require(!_routerWhitelist[_address], "Address is already whitelisted!");
+        _routerWhitelist[_address] = true;
+        emit Whitelisted(_address);
+    }
+
     function addToBlacklist(address _address) external onlyOwner {
         require(blacklistPossible, "Blacklisting is currently locked.");
         require(now > blacklistUnlockTimestamp, "Blacklisting is enabled, but currently timelocked.");
@@ -535,12 +538,6 @@ contract Dogira is Context, IERC20, Ownable {
 
     function transferERC20(address tokenAddress, address ownerAddress, uint tokens) external onlyOwner returns (bool success) {
         return IERC20(tokenAddress).transfer(ownerAddress, tokens);
-    }
-
-    function getChainId() internal pure returns (uint) {
-        uint256 chainId;
-        assembly { chainId := chainid() }
-        return chainId;
     }
 
 }
